@@ -1,2 +1,16 @@
-# Fly-In
-Multi-agent pathfinding drone routing simulation using scheduling on a capacitated weighted graph
+*This project has been created as part of the 42 curriculum by rbartok*
+
+# FLY-IN
+
+## Description
+
+## Instructions
+
+## Resources
+
+## Algorithm choices and implementation strategy
+
+## Visual representation
+
+## Example inputs and outputs
+
