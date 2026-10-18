@@ -6,7 +6,7 @@
 #    By: rbartok <rbartok@student.42wolfsburg.de    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/10/07 19:29:09 by rbartok           #+#    #+#              #
-#    Updated: 2026/10/15 20:14:16 by rbartok          ###   ########.fr        #
+#    Updated: 2026/10/18 22:08:02 by rbartok          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,8 +16,8 @@ install:
 	uv sync
 
 run:
+# 	uv run python -m src --map maps/challenger/01_the_impossible_dream.txt
 	uv run python -m src --map maps/easy/01_linear_path.txt
-
 debug:
 	uv run python -m pdb -m src
 

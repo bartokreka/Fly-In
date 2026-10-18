@@ -14,3 +14,6 @@ class Drone:
         self.id = id
         self.start_zone = start_zone
         self.state = State.START
+
+    def print(self) -> None:
+        print(f"Drone {self.id} with state {self.state}, start zone: {self.start_zone.print()}")  # noqa: E501

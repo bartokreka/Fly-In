@@ -17,6 +17,33 @@ class Graph:
         self.zones[zone.name] = zone
 
     def add_connection(self, connection: Connection) -> None:
-        self.connections.append(self.connection)
+        self.connections.append(connection)
         connection.zone_a.add_connection(connection)
         connection.zone_b.add_connection(connection)
+
+    def print_graph(self) -> None:
+        """Print all graph information for debugging."""
+        print("\n========== GRAPH ==========")
+
+        print(f"\nZones ({len(self.zones)}):")
+        for zone in self.zones.values():
+            print(f"  {vars(zone)}")
+
+        print(f"\nConnections ({len(self.connections)}):")
+        for connection in self.connections:
+            print(
+                f"  {connection.zone_a.name} <-> "
+                f"{connection.zone_b.name}"
+            )
+            print(f"    {vars(connection)}")
+
+        print(f"\nDrones ({len(self.drones)}):")
+        for drone in self.drones:
+            print(f"  {vars(drone)}")
+
+        print("\nStart zone:",
+            self.start_zone.name if self.start_zone else "None")
+        print("End zone:",
+            self.end_zone.name if self.end_zone else "None")
+
+        print("===========================\n")

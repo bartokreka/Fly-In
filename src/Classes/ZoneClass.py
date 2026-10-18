@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 class Zone:
     def __init__(self, name: str, x: int, y: int,
                  zone_type: str = "normal", color: str = "none",
-                 max_drones: int = 1) -> None:
+                 max_drones: int | None = 1) -> None:
         self.name = name
         self.x = x
         self.y = y
@@ -20,7 +20,9 @@ class Zone:
     def add_connection(self, connection: Connection) -> None:
         self.connections.append(connection)
 
-    def print(self) -> None:
-        print(f"Zone {self.name} ({self.x}, {self.y}) \
-              with color {self.color}, max capacity of {self.max_drones} \
-                drones, with connections to {self.connections}")
+    def print(self) -> str:
+        text = f"Zone {self.name} ({self.x}, {self.y}) with color {self.color}, max capacity of {self.max_drones} drones"  # noqa: E501
+        if self.connections:
+            text += (f"Connections to {self.connections}")
+        print(text)
+        return text
