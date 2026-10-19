@@ -20,6 +20,23 @@ class Zone:
     def add_connection(self, connection: Connection) -> None:
         self.connections.append(connection)
 
+    def get_cost(self) -> int:
+        if self.zone_type == "normal" or self.zone_type == "priority":
+            return 1
+        elif self.zone_type == "blocked":
+            return float("inf")
+        elif self.zone_type == "restricted":
+            return 2
+
+    def get_neighbors(self) -> list[Zone]:
+        neighbors: list[Zone] = []
+        for connection in self.connections:
+            if connection.zone_a == self:
+                neighbors.append(connection.zone_b)
+            elif connection.zone_b == self:
+                neighbors.append(connection.zone_a)
+        return neighbors
+
     def print(self) -> str:
         text = f"Zone {self.name} ({self.x}, {self.y}) with color {self.color}, max capacity of {self.max_drones} drones"  # noqa: E501
         if self.connections:

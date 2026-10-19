@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 from typing import Any
 from .Classes.ParserClass import Parser
+from .Classes.AlgorithmClass import Pathfinder
 
 
 def parse_arguments() -> Any:
@@ -30,9 +31,11 @@ def main() -> None:
     except ValueError as e:
         print(e)
         return
-    # start = graph.start_zone
-    # end = graph.end_zone
-    graph.print_graph()
+    start = graph.start_zone
+    end = graph.end_zone
+    # graph.print_graph()
+    path = Pathfinder()
+    path.print_path(path.find_path(start, end))
 
 
 if __name__ == "__main__":
