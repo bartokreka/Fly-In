@@ -41,14 +41,9 @@ class Parser:
         try:
             with open(filename, "r", encoding="utf-8") as f:
                 for line_nr, raw_line in enumerate(f, start=1):
-                    line = raw_line.strip()
-
-                    # Ignore empty lines, and commented out lines
-                    if not line or line.startswith("#"):
+                    line = raw_line.split("#", 1)[0].strip()
+                    if not line:
                         continue
-                    # Remove inline comments
-                    if "#" in line:
-                        line = line.split("#", 1)[0].strip()
                     if ":" not in line:
                         raise ValueError(f"Line {line_nr} missing ':' separator")  # noqa: E501
                     key, value = line.split(":", 1)
@@ -57,47 +52,57 @@ class Parser:
                     # Ignore unknown key value pairs
                     if key not in Parser.VALID_KEYS:
                         raise ValueError(f"{key} is not a valid data format")
-                    if value == "":
+                    if not value:
                         raise ValueError(
                             f"Line {line_nr}: missing value for key '{key}'"
                         )
-                    if not key:
-                        raise ValueError(f"Line {line_nr}: empty key")
                     entries.append((line_nr, key, value))
-        except ValueError as e:
-            raise ValueError(str(e)) from e
-        line_nr, key, value = entries[0]
-        if key != "nb_drones":
-            raise ValueError("The first line must define the number of drones using nb_drones: <positive_integer>")  # noqa: E501
+        except OSError as e:
+            raise ValueError(f"Cannot read file: {e}") from e
+        if not entries:
+            raise ValueError("Input file is empty")
+        if entries[0][1] != "nb_drones":
+            raise ValueError("First entry must be nb_drones")
+        if sum(key == "nb_drones" for _, key, _ in entries) != 1:
+            raise ValueError("Exactly one nb_drones entry is required")
         try:
-            num = int(value)
-        except ValueError:
-            raise ValueError("Number of drones must be an integer")
-        if num < 0:
-            raise ValueError("Number of drones cannot be negative")
+            num = int(entries[0][2])
+        except ValueError as e:
+            raise ValueError("Number of drones must be an integer") from e
+        if num <= 0:
+            raise ValueError("Number of drones must be positive")
         return entries
 
     @staticmethod
     def _validate_metadata(data: str, type: str, is_start_or_end_hub: bool = False) -> list[tuple[str, str | int]]:  # noqa: E501
         metadata: list[tuple[str, str | int]] = []
+        if not data.startswith("[") or not data.endswith("]"):
+            raise ValueError("Metadata must have the following format: [metadata]")  # noqa: E501
         data = data.strip("[]")
+        if not data:
+            raise ValueError("Metadata cannot be empty")
         data = data.split(" ")
         for entries in data:
             try:
                 key, value = entries.split("=")
-            except ValueError:
-                raise ValueError("Metadata should be given in [key = value] form")  # noqa: E501
+            except ValueError as e:
+                raise ValueError("Metadata should be given in [key = value] form") from e  # noqa: E501
+            if not key or not value:
+                raise ValueError("Metadata key and value cannot be empty")
             if type == "zone" and key not in Parser.VALID_ZONE_METADATA:
                 raise ValueError(f"{key} not a valid metadata for a zone")
             if type == "connection" and key != "max_link_capacity":
                 raise ValueError(f"{key} not a valid metadata for a connection")  # noqa: E501
-            if key in ["max_drones", "max_link_capacity"] and not is_start_or_end_hub:  # noqa: E501
-                try:
-                    value = int(value)
-                except ValueError:
-                    raise ValueError(f"{value} is not a positive integer for {key} metadata")  # noqa: E501
-                if value <= 0:
-                    raise ValueError(f"{key} metadata must be a positive integer, and greater than 0")  # noqa: E501
+            if any(existing == key for existing, _ in metadata):
+                raise ValueError(f"Duplicate metadata: {key}")
+            if key in ("max_drones", "max_link_capacity"):
+                if not (key == "max_drones" and is_start_or_end_hub):
+                    try:
+                        value = int(value)
+                    except ValueError as e:
+                        raise ValueError(f"{value} is not a positive integer for {key} metadata") from e  # noqa: E501
+                    if value <= 0:
+                        raise ValueError(f"{key} metadata must be greater than 0")  # noqa: E501
             metadata.append((key, value))
         return metadata
 
@@ -106,65 +111,68 @@ class Parser:
         start_zone: Zone | None = None
         end_zone: Zone | None = None
         for line_nr, key, value in entries:
-            if key == "start_hub":
-                if start_zone is not None:
-                    raise ValueError(f"Line {line_nr}: duplicate start_hub")
+            if key not in ("start_hub", "end_hub"):
+                continue
+            if key == "start_hub" and start_zone is not None:
+                raise ValueError(f"Line {line_nr}: duplicate start_hub")
+            if key == "end_hub" and end_zone is not None:
+                raise ValueError(f"Line {line_nr}: duplicate end_hub")
+            try:
                 zone_values = value.split(" ", 3)
+                if len(zone_values) < 3:
+                    raise ValueError("Missing zone name or coordinates")
+                name = zone_values[0]
+                if not Parser.is_valid_zone_name(name):
+                    raise ValueError("Invalid zone name")
+                x = int(zone_values[1])
+                y = int(zone_values[2])
                 metadata = []
-                try:
-                    metadata = Parser._validate_metadata(zone_values[3], "zone", True)
-                except ValueError as e:
-                    print(e)
-                    return
-                if not Parser.is_valid_zone_name(zone_values[0]):
-                    raise ValueError("Zone names can use any valid characters except dashes and spaces")  # noqa: E501
-                start_zone = Zone(zone_values[0], int(zone_values[1]), int(zone_values[2]))  # noqa: E501
-                for key, value in metadata:
-                    if key == "color":
-                        start_zone.color = value
-                    if key == "zone":
-                        start_zone.zone_type = value
-                start_zone.max_drones = None
-            if key == "end_hub":
-                if end_zone is not None:
-                    raise ValueError(f"Line {line_nr}: duplicate end_hub")
-                zone_values = value.split(" ", 3)
-                try:
-                    metadata = Parser._validate_metadata(zone_values[3], "zone")
-                except ValueError as e:
-                    raise ValueError(f"Line {line_nr}: {e}") from e
-                if not Parser.is_valid_zone_name(zone_values[0]):
-                    raise ValueError("Zone names can use any valid characters except dashes and spaces")  # noqa: E501
-                end_zone = Zone(zone_values[0], int(zone_values[1]), int(zone_values[2]))  # noqa: E501
-                for key, value in metadata:
-                    if key == "color":
-                        end_zone.color = value
-                    if key == "zone":
-                        end_zone.zone_type = value
-                end_zone.max_drones = None
+                if len(zone_values) == 4:
+                    metadata = Parser._validate_metadata(zone_values[3], "zone", True)  # noqa: E501
+                zone = Zone(name, x, y)
+                for meta_key, meta_value in metadata:
+                    if meta_key == "color":
+                        zone.color = meta_value
+                    elif meta_key == "zone":
+                        zone.zone_type = meta_value
+                zone.max_drones = None
+                if key == "start_hub":
+                    start_zone = zone
+                else:
+                    end_zone = zone
+            except ValueError as e:
+                raise ValueError(f"Line {line_nr}: {e}") from e
+
         if start_zone is None or end_zone is None:
             raise ValueError("Missing start_hub or end_hub")
-        return ([start_zone, end_zone])
+
+        return start_zone, end_zone
 
     @classmethod
     def _build_graph(cls, entries: list[tuple[int, str, str]]) -> Graph:
         graph = Graph()
         start, end = cls.extract_start_end(entries)
-        graph.start_zone = start
-        graph.end_zone = end
         for line_nr, key, value in entries:
-            if key == "nb_drones":
-                drone_nr = int(value)
-                for i in range(drone_nr):
-                    drone = Drone(i+1, start)
-                    graph.drones.append(drone)
-            if key == "hub":
-                zone = Parser._parse_zone(value)
-                graph.add_zone(zone)
-            # if key == "connection":
-            #     connection = Parser._parse_connection(value, graph)
-            #     graph.add_connection(connection)
-        graph.print_graph()
+            try:
+                if key == "nb_drones":
+                    drone_nr = int(value)
+                    for i in range(drone_nr):
+                        drone = Drone(i+1, start)
+                        graph.drones.append(drone)
+                elif key == "start_hub":
+                    graph.start_zone = start
+                    graph.add_zone(start)
+                elif key == "end_hub":
+                    graph.end_zone = end
+                    graph.add_zone(end)
+                elif key == "hub":
+                    zone = Parser._parse_zone(value)
+                    graph.add_zone(zone)
+                elif key == "connection":
+                    connection = Parser._parse_connection(value, graph)
+                    graph.add_connection(connection)
+            except ValueError as e:
+                raise ValueError(f"Line {line_nr}: {e}") from e
         return graph
 
     @staticmethod
@@ -175,41 +183,48 @@ class Parser:
     @staticmethod
     def _parse_zone(value: str) -> Zone:
         zone_values = value.split(" ", 3)
-        metadata = []
-        try:
-            metadata = Parser._validate_metadata(zone_values[3], False)
-        except ValueError as e:
-            print(e)
-            return
+        if len(zone_values) < 3:
+            raise ValueError("Missing zone name or coordinates")
         if not Parser.is_valid_zone_name(zone_values[0]):
-            raise ValueError("Zone names can use any valid characters except dashes and spaces")  # noqa: E501
-        zone = Zone(zone_values[0], int(zone_values[1]), int(zone_values[2]))  # noqa: E501
+            raise ValueError("Invalid zone name")
+        try:
+            x = int(zone_values[1])
+            y = int(zone_values[2])
+        except ValueError as e:
+            raise ValueError("Zone coordinates must be integers") from e
+        metadata = []
+        if len(zone_values) == 4:
+            metadata = Parser._validate_metadata(zone_values[3], "zone")
+        zone = Zone(zone_values[0], x, y)
         for key, value in metadata:
             if key == "color":
                 zone.color = value
-            if key == "zone":
+            elif key == "zone":
                 zone.zone_type = value
-            if key == "max_zones":
-                zone.zone_type = value
+            elif key == "max_drones":
+                zone.max_drones = value
         return zone
 
     @staticmethod
     def _parse_connection(value: str, graph: Graph) -> Connection:
-        # connection: gate_hell4-gate_hell5 [max_link_capacity=1]
-        value = value.split(" ", 1)
-        zone_a_name, zone_b_name = value[0].split("-")
-        for zone in graph.zones:
-            if zone[0] == zone_a_name:
-                zone_a = zone[1]
-            if zone[0] == zone_b_name:
-                zone_b = zone[1]
-        if len(value) > 1:
-            metadata = []
-            try:
-                metadata = Parser._validate_metadata(value[1], "connection", False)
-            except ValueError as e:
-                print(e)
-                return
-        if len(value) > 1:
-            print(metadata)
-        # connection = Connection(zone_a, zone_b, metadata)
+        parts = value.split(maxsplit=1)
+        names = parts[0].split("-")
+        if len(names) != 2 or not all(names):
+            raise ValueError("Invalid connection format")
+        zone_a_name, zone_b_name = names
+        zone_a = graph.zones.get(zone_a_name)
+        zone_b = graph.zones.get(zone_b_name)
+        if zone_a is None or zone_b is None:
+            raise ValueError("Connection references an undefined zone")
+        for existing in graph.connections:
+            if {existing.zone_a.name, existing.zone_b.name} == {
+                zone_a_name, zone_b_name
+            }:
+                raise ValueError("Duplicate connection")
+        connection = Connection(zone_a, zone_b)
+        if len(parts) > 1:
+            metadata = Parser._validate_metadata(parts[1], "connection")
+            for key, value in metadata:
+                if key == "max_link_capacity":
+                    connection.max_link_capacity = value
+        return connection

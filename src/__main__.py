@@ -32,6 +32,7 @@ def main() -> None:
         return
     # start = graph.start_zone
     # end = graph.end_zone
+    graph.print_graph()
 
 
 if __name__ == "__main__":
