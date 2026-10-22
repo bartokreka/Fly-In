@@ -34,8 +34,11 @@ def main() -> None:
     start = graph.start_zone
     end = graph.end_zone
     # graph.print_graph()
-    path = Pathfinder()
-    path.print_path(path.find_path(start, end))
+    alg = Pathfinder()
+    path = alg.find_path(start, end)
+    if not path:
+        return
+    alg.print_path(path)
 
 
 if __name__ == "__main__":
