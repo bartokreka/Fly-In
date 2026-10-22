@@ -75,7 +75,7 @@ class Pathfinder:
         return path
 
     @staticmethod
-    def print_path(path: list[Zone]):
+    def print_path(path: list[Zone]) -> None:
         path_length = len(path)
         for i in range(path_length):
             print(path[i].name)

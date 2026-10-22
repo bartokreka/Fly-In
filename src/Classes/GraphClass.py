@@ -21,8 +21,10 @@ class Graph:
         connection.zone_a.add_connection(connection)
         connection.zone_b.add_connection(connection)
 
+    def drone_count(self) -> int:
+        return len(self.drones)
+
     def print_graph(self) -> None:
-        """Print all graph information for debugging."""
         print("\n========== GRAPH ==========")
 
         print(f"\nZones ({len(self.zones)}):")

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 from .Classes.ParserClass import Parser
 from .Classes.AlgorithmClass import Pathfinder
+from .Classes.SimulationClass import Simulation
 
 
 def parse_arguments() -> Any:
@@ -38,7 +39,9 @@ def main() -> None:
     path = alg.find_path(start, end)
     if not path:
         return
-    alg.print_path(path)
+    # alg.print_path(path)
+    simulation = Simulation(graph)
+    simulation.print_simulation()
 
 
 if __name__ == "__main__":
