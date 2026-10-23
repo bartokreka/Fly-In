@@ -16,6 +16,7 @@ class Zone:
         self.color = color
         self.max_drones = max_drones
         self.connections: list[Connection] = []
+        self.is_end_zone: bool = False
 
     def add_connection(self, connection: Connection) -> None:
         self.connections.append(connection)

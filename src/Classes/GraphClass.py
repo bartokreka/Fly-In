@@ -36,7 +36,7 @@ class Graph:
             )
             print(f"    {vars(connection)}")
 
-        print(f"\nDrones ({len(self.drone_count)}):")
+        print(f"\nDrones ({self.drone_count}):")
 
         print("\nStart zone:",
             self.start_zone.name if self.start_zone else "None")

@@ -91,6 +91,8 @@ class Parser:
                 raise ValueError("Metadata key and value cannot be empty")
             if type == "zone" and key not in Parser.VALID_ZONE_METADATA:
                 raise ValueError(f"{key} not a valid metadata for a zone")
+            if type == "zone" and key == "zone" and value not in Parser.ZONE_TYPES:
+                raise ValueError(f"{value} is not a valid zone type")
             if type == "connection" and key != "max_link_capacity":
                 raise ValueError(f"{key} not a valid metadata for a connection")  # noqa: E501
             if any(existing == key for existing, _ in metadata):
@@ -140,6 +142,7 @@ class Parser:
                     start_zone = zone
                 else:
                     end_zone = zone
+                    end_zone.is_end_zone = True
             except ValueError as e:
                 raise ValueError(f"Line {line_nr}: {e}") from e
 
