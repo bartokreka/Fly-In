@@ -7,7 +7,7 @@ class Graph:
     def __init__(self) -> None:
         self.zones: dict[str, Zone] = {}
         self.connections: list[Connection] = []
-        self.drones: list[Drone] = []
+        self.drone_count: int = 0
         self.start_zone: Zone | None = None
         self.end_zone: Zone | None = None
 
@@ -20,9 +20,6 @@ class Graph:
         self.connections.append(connection)
         connection.zone_a.add_connection(connection)
         connection.zone_b.add_connection(connection)
-
-    def drone_count(self) -> int:
-        return len(self.drones)
 
     def print_graph(self) -> None:
         print("\n========== GRAPH ==========")
@@ -39,9 +36,7 @@ class Graph:
             )
             print(f"    {vars(connection)}")
 
-        print(f"\nDrones ({len(self.drones)}):")
-        for drone in self.drones:
-            print(f"  {vars(drone)}")
+        print(f"\nDrones ({len(self.drone_count)}):")
 
         print("\nStart zone:",
             self.start_zone.name if self.start_zone else "None")

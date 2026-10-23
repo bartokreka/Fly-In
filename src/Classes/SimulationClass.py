@@ -6,10 +6,12 @@ from .DroneClass import Drone
 
 class Simulation:
     def __init__(self, graph: Graph) -> None:
+        if graph.start_zone is None or graph.end_zone is None:
+            raise ValueError("Graph must have start and end zones")
         self.graph = graph
         self.drones: list[Drone] = [
-            Drone(i + 1, self.graph.start_zone)
-            for i in range(len(self.graph.drones))
+            Drone(i + 1, graph.start_zone)
+            for i in range(graph.drone_count)
         ]
         self.current_turn: int = 0
         self.finished_drones: int = 0

@@ -14,3 +14,5 @@
 
 ## Example inputs and outputs
 
+notes:
+Graph handles the network, and Simulation handles the drones and their movement.

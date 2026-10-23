@@ -156,9 +156,7 @@ class Parser:
             try:
                 if key == "nb_drones":
                     drone_nr = int(value)
-                    for i in range(drone_nr):
-                        drone = Drone(i+1, start)
-                        graph.drones.append(drone)
+                    graph.drone_count = drone_nr
                 elif key == "start_hub":
                     graph.start_zone = start
                     graph.add_zone(start)
