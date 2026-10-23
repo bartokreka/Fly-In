@@ -23,16 +23,25 @@ class Drone:
         self.current_zone = zone
         self.current_connection = None
         self.target_zone = None
+        self.route_index += 1
         if zone.is_end_zone:
             self.state = State.FINISHED
         else:
             self.state = State.WAITING
 
-    def start_resticted_move(self, target_zone: Zone, connection: Connection) -> None:
+    def start_restricted_move(self, target_zone: Zone, connection: Connection) -> None:
         self.current_zone = None
         self.current_connection = connection
         self.target_zone = target_zone
         self.state = State.MOVING
 
+    def get_next_zone(self) -> Zone:
+        next_zone = None
+        if self.current_zone.is_end_zone:
+            self.state = State.FINISHED
+        else:
+            next_zone = self.route[self.route_index]
+        return next_zone
+
     def print(self) -> None:
-        print(f"Drone {self.id} with state {self.state}, start zone: {self.start_zone.print()}")  # noqa: E501
+        print(f"Drone {self.id} with state {self.state}, start zone: {self.current_zone.print()}")  # noqa: E501
