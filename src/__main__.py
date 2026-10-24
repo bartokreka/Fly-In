@@ -4,6 +4,7 @@ from typing import Any
 from .Classes.ParserClass import Parser
 from .Classes.AlgorithmClass import Pathfinder
 from .Classes.SimulationClass import Simulation
+from .Classes.SchedulerClass import Scheduler
 
 
 def parse_arguments() -> Any:
@@ -34,14 +35,15 @@ def main() -> None:
         return
     start = graph.start_zone
     end = graph.end_zone
-    # graph.print_graph()
+    graph.print_graph()
     alg = Pathfinder()
     path = alg.find_path(start, end)
     if not path:
         return
     # alg.print_path(path)
-    simulation = Simulation(graph)
+    simulation = Simulation(graph, path)
     simulation.print_simulation()
+    simulation.run()
 
 
 if __name__ == "__main__":

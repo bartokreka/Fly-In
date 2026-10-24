@@ -6,7 +6,7 @@
 #    By: rbartok <rbartok@student.42wolfsburg.de    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/10/07 19:29:09 by rbartok           #+#    #+#              #
-#    Updated: 2026/10/22 19:49:02 by rbartok          ###   ########.fr        #
+#    Updated: 2026/10/24 14:08:12 by rbartok          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,9 +18,9 @@ install:
 run:
 # 	uv run python -m src --map maps/challenger/01_the_impossible_dream.txt
 # 	uv run python -m src --map maps/medium/01_dead_end_trap.txt
-# 	uv run python -m src --map maps/easy/01_linear_path.txt
+	uv run python -m src --map maps/easy/01_linear_path.txt
 # 	uv run python -m src --map maps/easy/03_basic_capacity.txt
-	uv run python -m src --map maps/easy/02_simple_fork.txt
+# 	uv run python -m src --map maps/easy/02_simple_fork.txt
 # 	uv run python -m src --map maps/hard/01_maze_nightmare.txt
 debug:
 	uv run python -m pdb -m src --map maps/easy/03_basic_capacity.txt

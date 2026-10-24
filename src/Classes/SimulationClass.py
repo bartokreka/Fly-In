@@ -1,11 +1,13 @@
 # Simulation
 #  └── Executes turns and checks constraints
 from .GraphClass import Graph
-from .DroneClass import Drone
+from .DroneClass import Drone, State
+from .ZoneClass import Zone
+from .SchedulerClass import Scheduler
 
 
 class Simulation:
-    def __init__(self, graph: Graph) -> None:
+    def __init__(self, graph: Graph, path: list[Zone]) -> None:
         if graph.start_zone is None or graph.end_zone is None:
             raise ValueError("Graph must have start and end zones")
         self.graph = graph
@@ -16,14 +18,36 @@ class Simulation:
         self.current_turn: int = 0
         self.finished_drones: int = 0
         self.movement_history: list[list[str]] = []
+        # temporary manual setup
+        self.solution_path = path
+
+    def update_drone_paths(self) -> None:
+        for drone in self.drones:
+            drone.route = self.solution_path
 
     def run(self) -> None:
+        # temporary manual setup
+        self.update_drone_paths()
         while not self.is_finished():
             self.step()
+            print(" ".join(self.movement_history[-1]))
 
     def step(self) -> None:
         """Execute one simultaneous simulation turn."""
-        pass
+        history: list[str] = []
+        route_plan = Scheduler(self.graph).step_plan(self.drones)
+        if not route_plan and not self.is_finished():
+            raise RuntimeError("Simulation is stuck: no possible moves")
+        for drone, zone in route_plan:
+            drone.arrive_to_zone(zone)
+            history.append(f"D{drone.id} -> {zone.name}")
+        finished = 0
+        for drone in self.drones:
+            if drone.state == State.FINISHED:
+                finished += 1
+        self.finished_drones = finished
+        self.current_turn += 1
+        self.movement_history.append(history)
 
     def is_finished(self) -> bool:
         """Check whether all drones have arrived."""

@@ -21,6 +21,14 @@ class Graph:
         connection.zone_a.add_connection(connection)
         connection.zone_b.add_connection(connection)
 
+    def get_connection(self, start_zone: Zone, end_zone: Zone) -> Connection | None:  # noqa: E501
+        if not start_zone or not end_zone:
+            return None
+        for connection in self.connections:
+            if connection.zone_a == start_zone and connection.zone_b == end_zone:  # noqa: E501
+                return connection
+        return None
+
     def print_graph(self) -> None:
         print("\n========== GRAPH ==========")
 
