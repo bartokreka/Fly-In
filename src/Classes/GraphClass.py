@@ -27,6 +27,8 @@ class Graph:
         for connection in self.connections:
             if connection.zone_a == start_zone and connection.zone_b == end_zone:  # noqa: E501
                 return connection
+            elif connection.zone_b == start_zone and connection.zone_a == end_zone:  # noqa: E501
+                return connection
         return None
 
     def print_graph(self) -> None:

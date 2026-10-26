@@ -51,7 +51,7 @@ class Scheduler:
 
     @staticmethod
     def is_zone_available(next_zone: Zone, zone_occupancy: dict[Zone, int]) -> bool:  # noqa: E501
-        if next_zone.is_end_zone:
+        if next_zone.max_drones is None:
             return True
         occupied = zone_occupancy.get(next_zone, 0)
         return occupied < next_zone.max_drones

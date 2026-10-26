@@ -37,7 +37,7 @@ class Pathfinder:
                 if neighbor in visited:
                     continue
                 cost = neighbor.get_cost()
-                if cost == float("inf"):
+                if cost < 1:
                     continue
                 new_cost = costs[current] + cost
                 new_priority_count = priority_counts[current]

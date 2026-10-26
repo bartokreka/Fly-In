@@ -22,12 +22,14 @@ class Zone:
         self.connections.append(connection)
 
     def get_cost(self) -> int:
+        cost: int = 1
         if self.zone_type == "normal" or self.zone_type == "priority":
-            return 1
+            return cost
         elif self.zone_type == "blocked":
-            return float("inf")
+            cost = -1
         elif self.zone_type == "restricted":
-            return 2
+            cost = 2
+        return cost
 
     def get_neighbors(self) -> list[Zone]:
         neighbors: list[Zone] = []
