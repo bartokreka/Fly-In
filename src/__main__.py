@@ -6,6 +6,11 @@ from .Classes.AlgorithmClass import Pathfinder
 from .Classes.SimulationClass import Simulation
 from .Classes.SchedulerClass import Scheduler
 
+import tkinter as tk
+
+from .Classes.SimulationClass import Simulation
+from .Classes.VisualizerClass import SimulationVisualizer
+
 
 def parse_arguments() -> Any:
     """Parse command-line arguments for the application.
@@ -35,15 +40,24 @@ def main() -> None:
         return
     start = graph.start_zone
     end = graph.end_zone
-    graph.print_graph()
+    # graph.print_graph()
     alg = Pathfinder()
     path = alg.find_path(start, end)
     if not path:
         return
     # alg.print_path(path)
     simulation = Simulation(graph, path)
-    simulation.print_simulation()
-    simulation.run()
+    # simulation.run()
+    # A graph és path a meglévő parseredből és algoritmusodból jön.
+    simulation = Simulation(graph, path)
+    simulation.update_drone_paths()
+
+    try:
+        visualization = SimulationVisualizer(simulation)
+    except tk.TclError as error:
+        print(f"Cannot open graphical window: {error}")
+    else:
+        visualization.run()
 
 
 if __name__ == "__main__":

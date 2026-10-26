@@ -4,6 +4,7 @@ from .GraphClass import Graph
 from .DroneClass import Drone, State
 from .ZoneClass import Zone
 from .SchedulerClass import Scheduler
+from .TerminalVisualizerClass import TerminalVisualizer
 
 
 class Simulation:
@@ -36,11 +37,14 @@ class Simulation:
         """Execute one simultaneous simulation turn."""
         history: list[str] = []
         route_plan = Scheduler(self.graph).step_plan(self.drones)
+        visualizer : TerminalVisualizer = TerminalVisualizer()
         if not route_plan and not self.is_finished():
             raise RuntimeError("Simulation is stuck: no possible moves")
         for drone, zone in route_plan:
             drone.arrive_to_zone(zone)
-            history.append(f"D{drone.id} -> {zone.name}")
+            text = f"D{drone.id}-{zone.name}"
+            colored_text = visualizer.colorize(text, zone.color)
+            history.append(colored_text)
         finished = 0
         for drone in self.drones:
             if drone.state == State.FINISHED:
@@ -53,15 +57,14 @@ class Simulation:
         """Check whether all drones have arrived."""
         return self.finished_drones == len(self.drones)
 
-    # apply_movements()	Apply all approved movements simultaneously
-    # record_turn()	Store movements for output
-
     def print_simulation(self) -> None:
         print("\n========== SIMULATION ==========")
         print(f"Current turn: {self.current_turn}")
-        print(f"\nDrones ({len(self.drones)}):")
+        print(f"\n{len(self.drones)} Drones:")
         for drone in self.drones:
-            print(f"  {vars(drone)}")
+            print(f"D{drone.id}, state: {drone.state.value}")
+            print(f"Current zone: {drone.current_zone.name if drone.current_zone is not None else None}, target zone: {drone.target_zone.name if drone.target_zone is not None else None}")
+            print(f"current index: {drone.route_index}")
         print(f"Finished drones: {self.finished_drones}")
         print("Movement history:")
         for turn, moves in enumerate(self.movement_history, start=1):
