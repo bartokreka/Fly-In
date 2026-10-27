@@ -5,6 +5,7 @@ from .DroneClass import Drone, State
 from .ZoneClass import Zone
 from .ConnectionClass import Connection
 from .GraphClass import Graph
+from .MovementClass import Movement
 
 
 class Scheduler:
@@ -61,15 +62,48 @@ class Scheduler:
         occupied = connection_occupancy.get(connection, 0)
         return occupied < connection.max_link_capacity
 
-    def step_plan(self, drones: list[Drone]) -> list[tuple[Drone, Zone]]:  # noqa: E501
-        step_plan: list[tuple[Drone, Zone]] = []
+    @staticmethod
+    def get_required_arrivals(drones: list[Drone]) -> list[tuple[Drone, Zone]]:
+        arrivals = []
+        for drone in drones:
+            if drone.state == State.MOVING:
+                if drone.target_zone is None:
+                    raise ValueError("Moving drone has no target")
+                arrivals.append((drone, drone.target_zone))
+        return arrivals
+
+    @staticmethod
+    def can_start_restricted(zone: Zone, occupancy: dict[Zone, int], reservations: dict[Zone, int], is_end: bool = False) -> bool:  # noqa: E501
+        if is_end:
+            return True
+        capacity = zone.max_drones
+        if capacity is None:
+            return True
+        occupied = occupancy.get(zone, 0)
+        reserved = reservations.get(zone, 0)
+        return occupied + reserved < capacity
+
+    def step_plan(self, drones: list[Drone]) -> list[Movement]:  # noqa: E501
+        step_plan: list[Movement] = []
         zone_occupancy = self.get_zone_occupancy(drones)
         connection_occupancy = self.get_connection_occupancy(drones)
-
-        waiting_drones = []
+        moving_drones: list[Drone] = []
+        waiting_drones: list[Drone] = []
+        reservations: dict[Zone, int] = {}
         for drone in drones:
             if drone.state == State.WAITING:
                 waiting_drones.append(drone)
+            elif drone.state == State.MOVING:
+                moving_drones.append(drone)
+        for drone in moving_drones:
+            if drone.target_zone is None:
+                raise ValueError("Moving drone has no target")
+            if drone.current_connection is None:
+                raise ValueError("Moving drone has no connection")
+            destination = drone.target_zone
+            step_plan.append(Movement(drone, destination, drone.current_connection, is_arrival=True))
+            self.modify_connection_occupancy(connection_occupancy, drone.current_connection, "remove")
+            self.modify_zone_occupancy(zone_occupancy, destination, "add")
         drone_reverse_list: list[Drone] = sorted(waiting_drones, key=lambda drone: drone.route_index, reverse=True)  # noqa: E501
         for drone in drone_reverse_list:
             start_zone = drone.current_zone
@@ -81,13 +115,22 @@ class Scheduler:
             connection = self.graph.get_connection(start_zone, next_zone)
             if connection is None:
                 raise ValueError(f"No connection for drone {drone.id}'s next move")  # noqa: E501
-            if not self.is_zone_available(next_zone, zone_occupancy):
+            if next_zone.zone_type == "blocked":
                 continue
+            if next_zone.zone_type == "restricted":
+                if not self.can_start_restricted(next_zone, zone_occupancy, reservations, next_zone == self.graph.end_zone):
+                    continue
+            else:
+                if not self.is_zone_available(next_zone, zone_occupancy):
+                    continue
             if not self.is_connection_available(connection, connection_occupancy):  # noqa: E501
                 continue
-            step_plan.append([drone, next_zone])
+            step_plan.append(Movement(drone, next_zone, connection, is_arrival=False))  # noqa: E501
             self.modify_zone_occupancy(zone_occupancy, start_zone, "remove")
-            self.modify_zone_occupancy(zone_occupancy, next_zone, "add")
+            if next_zone.zone_type == "restricted":
+                reservations[next_zone] = reservations.get(next_zone, 0) + 1
+            else:
+                self.modify_zone_occupancy(zone_occupancy, next_zone, "add")
             self.modify_connection_occupancy(connection_occupancy, connection, "add")  # noqa: E501
 
         return step_plan

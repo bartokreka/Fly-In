@@ -222,7 +222,7 @@ class Parser:
                 zone_a_name, zone_b_name
             }:
                 raise ValueError("Duplicate connection")
-        connection = Connection(zone_a, zone_b)
+        connection = Connection(parts[0], zone_a, zone_b)
         if len(parts) > 1:
             metadata = Parser._validate_metadata(parts[1], "connection")
             for key, value in metadata:

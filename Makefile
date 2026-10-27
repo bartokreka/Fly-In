@@ -6,7 +6,7 @@
 #    By: rbartok <rbartok@student.42wolfsburg.de    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/10/07 19:29:09 by rbartok           #+#    #+#              #
-#    Updated: 2026/10/26 17:19:20 by rbartok          ###   ########.fr        #
+#    Updated: 2026/10/26 22:26:36 by rbartok          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,14 +16,15 @@ install:
 	uv sync
 
 run:
+	uv run python -m src --map maps/custom/1_linear_restricted.txt
 # 	uv run python -m src --map maps/challenger/01_the_impossible_dream.txt
 # 	uv run python -m src --map maps/medium/01_dead_end_trap.txt
 # 	uv run python -m src --map maps/easy/01_linear_path.txt
 # 	uv run python -m src --map maps/easy/03_basic_capacity.txt
-	uv run python -m src --map maps/easy/02_simple_fork.txt
+# 	uv run python -m src --map maps/easy/02_simple_fork.txt
 # 	uv run python -m src --map maps/hard/01_maze_nightmare.txt
 debug:
-	uv run python -m pdb -m src --map maps/easy/03_basic_capacity.txt
+	uv run python -m pdb -m src --map maps/custom/1_linear_restricted.txt
 
 clean:
 	find . -type d \( -name "__pycache__" -o -name ".mypy_cache" \) -exec rm -r {} +

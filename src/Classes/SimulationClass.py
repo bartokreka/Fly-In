@@ -4,6 +4,7 @@ from .GraphClass import Graph
 from .DroneClass import Drone, State
 from .ZoneClass import Zone
 from .SchedulerClass import Scheduler
+from .MovementClass import Movement
 from .TerminalVisualizerClass import TerminalVisualizer
 
 
@@ -32,19 +33,36 @@ class Simulation:
         while not self.is_finished():
             self.step()
             print(" ".join(self.movement_history[-1]))
+            # self.print_simulation()
+
+    def execute_move(self, movement: Movement) -> str:
+        drone = movement.drone
+        destination = movement.destination
+        if movement.is_arrival:
+            drone.arrive_to_zone(destination)
+            text = f"D{drone.id}-{destination.name}"
+        elif destination.zone_type == "restricted":
+            if movement.connection is None:
+                raise ValueError("Restricted movement needs a connection")
+            drone.start_restricted_move(destination, movement.connection)
+            text = f"D{drone.id}-{movement.connection.name}"
+        else:
+            drone.arrive_to_zone(destination)
+            text = f"D{drone.id}-{destination.name}"
+        visualizer = TerminalVisualizer()
+        return visualizer.colorize(text, destination.color)
 
     def step(self) -> None:
         """Execute one simultaneous simulation turn."""
         history: list[str] = []
         route_plan = Scheduler(self.graph).step_plan(self.drones)
-        visualizer : TerminalVisualizer = TerminalVisualizer()
+
         if not route_plan and not self.is_finished():
             raise RuntimeError("Simulation is stuck: no possible moves")
-        for drone, zone in route_plan:
-            drone.arrive_to_zone(zone)
-            text = f"D{drone.id}-{zone.name}"
-            colored_text = visualizer.colorize(text, zone.color)
-            history.append(colored_text)
+        for movement in route_plan:
+            print_text = self.execute_move(movement)
+            # movement.print_movement()
+            history.append(print_text)
         finished = 0
         for drone in self.drones:
             if drone.state == State.FINISHED:

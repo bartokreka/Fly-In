@@ -51,7 +51,7 @@ def main() -> None:
     # A graph és path a meglévő parseredből és algoritmusodból jön.
     simulation = Simulation(graph, path)
     simulation.update_drone_paths()
-
+    # simulation.run()
     try:
         visualization = SimulationVisualizer(simulation)
     except tk.TclError as error:
