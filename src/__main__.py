@@ -42,15 +42,13 @@ def main() -> None:
     end = graph.end_zone
     # graph.print_graph()
     alg = Pathfinder()
-    path = alg.find_path(start, end)
-    if not path:
+    paths = alg.find_paths(start, end, 5)
+    # for path in paths:
+    #     print([zone.name for zone in path])
+    if len(paths) < 1:
         return
     # alg.print_path(path)
-    simulation = Simulation(graph, path)
-    # simulation.run()
-    # A graph és path a meglévő parseredből és algoritmusodból jön.
-    simulation = Simulation(graph, path)
-    simulation.update_drone_paths()
+    simulation = Simulation(graph, paths)
     # simulation.run()
     try:
         visualization = SimulationVisualizer(simulation)

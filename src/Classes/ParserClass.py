@@ -162,10 +162,14 @@ class Parser:
                     graph.drone_count = drone_nr
                 elif key == "start_hub":
                     graph.start_zone = start
+                    graph.start_zone.max_drones = None
                     graph.add_zone(start)
+                    graph.special_max_drone_update(start)
                 elif key == "end_hub":
                     graph.end_zone = end
+                    graph.end_zone.max_drones = None
                     graph.add_zone(end)
+                    graph.special_max_drone_update(end)
                 elif key == "hub":
                     zone = Parser._parse_zone(value)
                     graph.add_zone(zone)

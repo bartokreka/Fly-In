@@ -2,11 +2,13 @@ from .ZoneClass import Zone
 
 
 class Pathfinder:
-    def find_path(self, start: Zone, end: Zone) -> list[Zone]:
+    def find_path(self, start: Zone, end: Zone, excluded_zones: set[Zone] | None = None, excluded_edges: set[frozenset[Zone]] | None = None) -> list[Zone]:  # noqa: E501
         costs = {start: 0}
         priority_counts = {start: 0}
         previous: dict[Zone, Zone] = {}
         visited: set[Zone] = set()
+        excluded_zones = excluded_zones or set()
+        excluded_edges = excluded_edges or set()
 
         while True:
             # 1. Find the unvisited zone with the lowest cost
@@ -25,7 +27,6 @@ class Pathfinder:
                         highest_priority_count = priority_counts[zone]
                         current = zone
             if current is None:
-                print("There is no possible solution for this graph!")
                 return []
             if current == end:
                 break
@@ -35,6 +36,11 @@ class Pathfinder:
             neighbors = current.get_neighbors()
             for neighbor in neighbors:
                 if neighbor in visited:
+                    continue
+                if neighbor in excluded_zones:
+                    continue
+                edge = frozenset((current, neighbor))
+                if edge in excluded_edges:
                     continue
                 cost = neighbor.get_cost()
                 if cost < 1:
@@ -73,6 +79,79 @@ class Pathfinder:
         path.append(start)
         path.reverse()
         return path
+
+    def get_path_cost(self, path: list[Zone]) -> int:
+        sum = 0
+        for zone in path[1:]:
+            sum += zone.get_cost()
+        return sum
+
+    def get_priority_count(self, path: list[Zone]) -> int:
+        prio_sum = 0
+        for zone in path[1:]:
+            if zone.zone_type == "priority":
+                prio_sum += 1
+        return prio_sum
+
+    def find_paths(self, start: Zone, end: Zone, k: int = 5) -> list[list[Zone]]:  # noqa: E501
+        if k <= 0:
+            return []
+        first_path = self.find_path(start, end)
+        if not first_path:
+            return []
+        paths: list[list[Zone]] = [first_path]
+        candidates: list[list[Zone]] = []
+        while len(paths) < k:
+            previous_path = paths[-1]
+
+            for i in range(len(previous_path) - 1):
+                spur_node = previous_path[i]
+                root_path = previous_path[:i + 1]
+
+                excluded_edges: set[frozenset[Zone]] = set()
+
+                for path in paths:
+                    if (
+                        len(path) > i + 1
+                        and path[:i + 1] == root_path
+                    ):
+                        excluded_edges.add(
+                            frozenset((path[i], path[i + 1]))
+                        )
+
+                excluded_zones = set(root_path[:-1])
+
+                spur_path = self.find_path(
+                    spur_node,
+                    end,
+                    excluded_zones=excluded_zones,
+                    excluded_edges=excluded_edges
+                )
+
+                if not spur_path:
+                    continue
+
+                total_path = root_path[:-1] + spur_path
+
+                if (
+                    total_path not in paths
+                    and total_path not in candidates
+                ):
+                    candidates.append(total_path)
+
+            if not candidates:
+                break
+
+            candidates.sort(
+                key=lambda path: (
+                    self.get_path_cost(path),
+                    -self.get_priority_count(path)
+                )
+            )
+
+            best_path = candidates.pop(0)
+            paths.append(best_path)
+        return paths
 
     @staticmethod
     def print_path(path: list[Zone]) -> None:

@@ -46,4 +46,4 @@ class Drone:
         return self.route[next_route_index]
 
     def print(self) -> str:
-        return(f"Drone {self.id} with state {self.state}")
+        return (f"Drone {self.id} with state {self.state}")

@@ -5,11 +5,12 @@ from .DroneClass import Drone, State
 from .ZoneClass import Zone
 from .SchedulerClass import Scheduler
 from .MovementClass import Movement
+from .RouteAllocatorClass import RouteAllocator
 from .TerminalVisualizerClass import TerminalVisualizer
 
 
 class Simulation:
-    def __init__(self, graph: Graph, path: list[Zone]) -> None:
+    def __init__(self, graph: Graph, paths: list[list[Zone]]) -> None:
         if graph.start_zone is None or graph.end_zone is None:
             raise ValueError("Graph must have start and end zones")
         self.graph = graph
@@ -20,16 +21,11 @@ class Simulation:
         self.current_turn: int = 0
         self.finished_drones: int = 0
         self.movement_history: list[list[str]] = []
-        # temporary manual setup
-        self.solution_path = path
-
-    def update_drone_paths(self) -> None:
-        for drone in self.drones:
-            drone.route = self.solution_path
+        self.solution_paths = paths
+        allocator = RouteAllocator(self.solution_paths)
+        allocator.assign_routes(self.drones)
 
     def run(self) -> None:
-        # temporary manual setup
-        self.update_drone_paths()
         while not self.is_finished():
             self.step()
             print(" ".join(self.movement_history[-1]))

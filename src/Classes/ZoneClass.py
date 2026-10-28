@@ -43,7 +43,7 @@ class Zone:
     def print(self) -> str:
         text = f"Zone {self.name} ({self.x}, {self.y}) with color {self.color}, max capacity of {self.max_drones} drones"  # noqa: E501
         if self.is_end_zone:
-            text+= "\nIT'S THE END\n"
+            text += "\nIT'S THE END\n"
         if self.connections:
             text += (f"Connections to {self.connections}")
         return text

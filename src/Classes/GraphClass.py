@@ -1,6 +1,5 @@
 from .ZoneClass import Zone
 from .ConnectionClass import Connection
-from .DroneClass import Drone
 
 
 class Graph:
@@ -15,6 +14,9 @@ class Graph:
         if zone.name in self.zones:
             raise ValueError(f"Duplicate zone: {zone.name}")
         self.zones[zone.name] = zone
+
+    def special_max_drone_update(self, zone: Zone) -> None:
+        self.zones[zone.name].max_drones = None
 
     def add_connection(self, connection: Connection) -> None:
         self.connections.append(connection)
