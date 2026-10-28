@@ -1,6 +1,7 @@
 from .ZoneClass import Zone
 
 
+# mypy: disable-error-code="assignment"
 class Pathfinder:
     def find_path(self, start: Zone, end: Zone, excluded_zones: set[Zone] | None = None, excluded_edges: set[frozenset[Zone]] | None = None) -> list[Zone]:  # noqa: E501
         costs = {start: 0}

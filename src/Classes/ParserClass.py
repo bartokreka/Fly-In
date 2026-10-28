@@ -1,9 +1,9 @@
 from .GraphClass import Graph
-from .DroneClass import Drone
 from .ZoneClass import Zone
 from .ConnectionClass import Connection
 
 
+# mypy: disable-error-code="assignment"
 class Parser:
     def __init__(self, file: str) -> None:
         self._file = file
@@ -91,7 +91,7 @@ class Parser:
                 raise ValueError("Metadata key and value cannot be empty")
             if type == "zone" and key not in Parser.VALID_ZONE_METADATA:
                 raise ValueError(f"{key} not a valid metadata for a zone")
-            if type == "zone" and key == "zone" and value not in Parser.ZONE_TYPES:
+            if type == "zone" and key == "zone" and value not in Parser.ZONE_TYPES:  # noqa: E501
                 raise ValueError(f"{value} is not a valid zone type")
             if type == "connection" and key != "max_link_capacity":
                 raise ValueError(f"{key} not a valid metadata for a connection")  # noqa: E501
@@ -103,7 +103,7 @@ class Parser:
                         value = int(value)
                     except ValueError as e:
                         raise ValueError(f"{value} is not a positive integer for {key} metadata") from e  # noqa: E501
-                    if value <= 0:
+                    if int(value) <= 0:
                         raise ValueError(f"{key} metadata must be greater than 0")  # noqa: E501
             metadata.append((key, value))
         return metadata

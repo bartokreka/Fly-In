@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 
 class Connection:
-    def __init__(self, name: str, zone_a: "Zone", zone_b: "Zone",max_link_capacity: int = 1,) -> None:  # noqa: E501
+    def __init__(self, name: str, zone_a: "Zone", zone_b: "Zone", max_link_capacity: int = 1,) -> None:  # noqa: E501
         self.name = name
         self.zone_a = zone_a
         self.zone_b = zone_b
@@ -20,5 +20,4 @@ class Connection:
         raise ValueError("Zone is not part of the connection")
 
     def print_connection(self) -> str:
-        return(f"Connection between {self.zone_a} and {self.zone_b} with max drone capacity of {self.max_link_capacity}")  # noqa: E501
-        self.current_zone = None
+        return (f"Connection between {self.zone_a} and {self.zone_b} with max drone capacity of {self.max_link_capacity}")  # noqa: E501

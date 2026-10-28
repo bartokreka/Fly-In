@@ -3,6 +3,7 @@ from .ConnectionClass import Connection
 from .DroneClass import Drone
 from .ZoneClass import Zone
 
+
 @dataclass
 class Movement:
     drone: Drone

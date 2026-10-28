@@ -12,3 +12,9 @@ dev = [
     "mypy",
     "pytest",
 ]
+
+[tool.mypy]
+exclude = [
+    "^\\.venv/",
+    "__pycache__"
+]

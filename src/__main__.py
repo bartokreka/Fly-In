@@ -1,13 +1,9 @@
 import argparse
+import tkinter as tk
 from pathlib import Path
 from typing import Any
 from .Classes.ParserClass import Parser
 from .Classes.AlgorithmClass import Pathfinder
-from .Classes.SimulationClass import Simulation
-from .Classes.SchedulerClass import Scheduler
-
-import tkinter as tk
-
 from .Classes.SimulationClass import Simulation
 from .Classes.VisualizerClass import SimulationVisualizer
 

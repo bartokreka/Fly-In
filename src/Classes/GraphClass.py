@@ -50,9 +50,7 @@ class Graph:
 
         print(f"\nDrones ({self.drone_count}):")
 
-        print("\nStart zone:",
-            self.start_zone.name if self.start_zone else "None")
-        print("End zone:",
-            self.end_zone.name if self.end_zone else "None")
+        print("\nStart zone:", self.start_zone.name if self.start_zone else "None")  # noqa: E501
+        print("End zone:", self.end_zone.name if self.end_zone else "None")  # noqa: E501
 
         print("===========================\n")

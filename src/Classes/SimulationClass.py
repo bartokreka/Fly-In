@@ -1,5 +1,3 @@
-# Simulation
-#  └── Executes turns and checks constraints
 from .GraphClass import Graph
 from .DroneClass import Drone, State
 from .ZoneClass import Zone
@@ -46,7 +44,7 @@ class Simulation:
             drone.arrive_to_zone(destination)
             text = f"D{drone.id}-{destination.name}"
         visualizer = TerminalVisualizer()
-        return visualizer.colorize(text, destination.color)
+        return str(visualizer.colorize(text, destination.color))
 
     def step(self) -> None:
         """Execute one simultaneous simulation turn."""
@@ -77,7 +75,7 @@ class Simulation:
         print(f"\n{len(self.drones)} Drones:")
         for drone in self.drones:
             print(f"D{drone.id}, state: {drone.state.value}")
-            print(f"Current zone: {drone.current_zone.name if drone.current_zone is not None else None}, target zone: {drone.target_zone.name if drone.target_zone is not None else None}")
+            print(f"Current zone: {drone.current_zone.name if drone.current_zone is not None else None}, target zone: {drone.target_zone.name if drone.target_zone is not None else None}")  # noqa: E501
             print(f"current index: {drone.route_index}")
         print(f"Finished drones: {self.finished_drones}")
         print("Movement history:")
