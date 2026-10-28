@@ -3,7 +3,29 @@ from .ZoneClass import Zone
 
 # mypy: disable-error-code="assignment"
 class Pathfinder:
+    """Find cheapest paths through the zone graph.
+
+    Paths are ranked by total zone cost. Among paths of equal cost, the
+    one crossing more priority zones is preferred.
+    """
+
     def find_path(self, start: Zone, end: Zone, excluded_zones: set[Zone] | None = None, excluded_edges: set[frozenset[Zone]] | None = None) -> list[Zone]:  # noqa: E501
+        """Find the cheapest path between two zones with Dijkstra's algorithm.
+
+        Blocked zones are never entered. Ties in cost are broken in favor of
+        the path visiting more priority zones.
+
+        Args:
+            start: Zone the path starts from.
+            end: Zone the path must reach.
+            excluded_zones: Zones the path must not pass through.
+            excluded_edges: Connections, given as unordered zone pairs, the
+                path must not use.
+
+        Returns:
+            The zones from ``start`` to ``end`` inclusive, or an empty list
+            if ``end`` cannot be reached.
+        """
         costs = {start: 0}
         priority_counts = {start: 0}
         previous: dict[Zone, Zone] = {}
@@ -82,12 +104,30 @@ class Pathfinder:
         return path
 
     def get_path_cost(self, path: list[Zone]) -> int:
+        """Compute the total travel cost of a path.
+
+        The first zone is excluded, since drones are already there.
+
+        Args:
+            path: Ordered zones from start to end.
+
+        Returns:
+            The sum of the costs of every zone after the first.
+        """
         sum = 0
         for zone in path[1:]:
             sum += zone.get_cost()
         return sum
 
     def get_priority_count(self, path: list[Zone]) -> int:
+        """Count the priority zones on a path, excluding the first zone.
+
+        Args:
+            path: Ordered zones from start to end.
+
+        Returns:
+            The number of priority zones after the first zone.
+        """
         prio_sum = 0
         for zone in path[1:]:
             if zone.zone_type == "priority":
@@ -95,6 +135,18 @@ class Pathfinder:
         return prio_sum
 
     def find_paths(self, start: Zone, end: Zone, k: int = 5) -> list[list[Zone]]:  # noqa: E501
+        """Find up to ``k`` distinct cheapest paths with Yen's algorithm.
+
+        Args:
+            start: Zone the paths start from.
+            end: Zone the paths must reach.
+            k: Maximum number of paths to return.
+
+        Returns:
+            Loopless paths ordered from best to worst. Fewer than ``k`` paths
+            are returned if not enough exist, and none if ``end`` cannot be
+            reached or ``k`` is not positive.
+        """
         if k <= 0:
             return []
         first_path = self.find_path(start, end)
@@ -156,6 +208,11 @@ class Pathfinder:
 
     @staticmethod
     def print_path(path: list[Zone]) -> None:
+        """Print the zone names of a path, one per line.
+
+        Args:
+            path: Ordered zones to print.
+        """
         path_length = len(path)
         for i in range(path_length):
             print(path[i].name)

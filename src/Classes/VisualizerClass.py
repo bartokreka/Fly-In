@@ -15,7 +15,16 @@ from .SimulationClass import Simulation
 
 @dataclass(frozen=True)
 class ZoneView:
-    """Describe a zone for display."""
+    """Describe a zone for display.
+
+    Attributes:
+        name: Zone name.
+        x: Horizontal map coordinate.
+        y: Vertical map coordinate.
+        color: Display color name, or None for the default color.
+        zone_type: Zone type shown in the label.
+        capacity: Maximum number of drones, or None for unlimited.
+    """
 
     name: str
     x: int
@@ -27,7 +36,13 @@ class ZoneView:
 
 @dataclass(frozen=True)
 class ConnectionView:
-    """Describe a connection for display."""
+    """Describe a connection for display.
+
+    Attributes:
+        start: Name of the first endpoint zone.
+        end: Name of the second endpoint zone.
+        capacity: Maximum number of drones in transit at once.
+    """
 
     start: str
     end: str
@@ -36,7 +51,14 @@ class ConnectionView:
 
 @dataclass(frozen=True)
 class DroneView:
-    """Describe a drone in a zone or on a connection."""
+    """Describe a drone in a zone or on a connection.
+
+    Attributes:
+        name: Label drawn on the drone.
+        zone: Name of the zone the drone is in, or None.
+        connection: Endpoint names of the connection the drone is on, or
+            None.
+    """
 
     name: str
     zone: str | None = None
@@ -45,7 +67,14 @@ class DroneView:
 
 @dataclass(frozen=True)
 class Frame:
-    """Describe the simulation state after one complete turn."""
+    """Describe the simulation state after one complete turn.
+
+    Attributes:
+        turn: Number of completed turns.
+        drones: Drones that have not reached the end zone yet.
+        delivered: Number of drones that reached the end zone.
+        finished: True once every drone has been delivered.
+    """
 
     turn: int
     drones: Sequence[DroneView]
@@ -63,7 +92,15 @@ class Visualizer:
         initial_frame: Frame,
         next_frame: Callable[[], Frame],
     ) -> None:
-        """Create the window, controls, and canvas."""
+        """Create the window, controls, and canvas.
+
+        Args:
+            zones: Zones to draw.
+            connections: Connections to draw.
+            initial_frame: State shown before the first turn.
+            next_frame: Callback that advances the simulation by one turn
+                and returns the new state.
+        """
         self.zones = {zone.name: zone for zone in zones}
         self.connections = list(connections)
         self.frame = initial_frame
@@ -140,7 +177,11 @@ class Visualizer:
         ).pack(fill=tk.X)
 
     def _on_resize(self, _event: tk.Event) -> None:
-        """Redraw the network after resizing."""
+        """Redraw the network after resizing.
+
+        Args:
+            _event: The Tk configure event, unused.
+        """
         self._draw()
 
     def _calculate_positions(self) -> None:
@@ -181,7 +222,14 @@ class Visualizer:
             )
 
     def _safe_color(self, color: str | None) -> str:
-        """Return a Tk color, falling back for unsupported names."""
+        """Return a Tk color, falling back for unsupported names.
+
+        Args:
+            color: Requested color name, or None.
+
+        Returns:
+            ``color`` if Tk supports it, otherwise a default gray.
+        """
         if color:
             try:
                 self.root.winfo_rgb(color)
@@ -251,7 +299,13 @@ class Visualizer:
         x: float,
         y: float,
     ) -> None:
-        """Arrange drones around a shared position."""
+        """Arrange drones around a shared position.
+
+        Args:
+            drones: Drones located at the same position.
+            x: Horizontal canvas coordinate of the position.
+            y: Vertical canvas coordinate of the position.
+        """
         count = len(drones)
         ring_radius = 0.0 if count == 1 else max(
             17.0, count * 30 / math.tau
@@ -387,7 +441,11 @@ class SimulationVisualizer:
     """Connect the simulation to the graphical interface."""
 
     def __init__(self, simulation: Simulation) -> None:
-        """Build the visual representation of the simulation."""
+        """Build the visual representation of the simulation.
+
+        Args:
+            simulation: The simulation to display.
+        """
         self.simulation = simulation
         graph = simulation.graph
 
@@ -424,7 +482,14 @@ class SimulationVisualizer:
         )
 
     def build_frame(self) -> Frame:
-        """Convert the current simulation state into a display frame."""
+        """Convert the current simulation state into a display frame.
+
+        Returns:
+            The frame describing the current turn.
+
+        Raises:
+            ValueError: If a drone is neither in a zone nor on a connection.
+        """
         drones: list[DroneView] = []
 
         for drone in self.simulation.drones:
@@ -462,7 +527,11 @@ class SimulationVisualizer:
         )
 
     def next_frame(self) -> Frame:
-        """Execute one turn, print its movements, and return its state."""
+        """Execute one turn, print its movements, and return its state.
+
+        Returns:
+            The frame describing the new turn.
+        """
         if not self.simulation.is_finished():
             self.simulation.step()
             print(" ".join(self.simulation.movement_history[-1]))

@@ -20,7 +20,11 @@ def parse_arguments() -> Any:
 
 
 def main() -> None:
-    """Run the drone simulation"""
+    """Run the drone simulation.
+
+    Parses the map, finds candidate paths and opens the graphical
+    visualizer. Errors are printed instead of raised.
+    """
     args = parse_arguments()
     map_path = args.map
     if not map_path:

@@ -5,7 +5,20 @@ from .ConnectionClass import Connection
 
 # mypy: disable-error-code="assignment"
 class Parser:
+    """Parse map files into a graph.
+
+    Attributes:
+        ZONE_TYPES: Allowed values for the ``zone`` metadata.
+        VALID_KEYS: Allowed line keys in a map file.
+        VALID_ZONE_METADATA: Allowed metadata keys for a hub.
+    """
+
     def __init__(self, file: str) -> None:
+        """Initialize a parser for a map file.
+
+        Args:
+            file: Path to the map file.
+        """
         self._file = file
 
     ZONE_TYPES = {
@@ -31,12 +44,38 @@ class Parser:
 
     @classmethod
     def from_file(cls, filename: str) -> Graph:
+        """Parse a map file and build its graph.
+
+        Args:
+            filename: Path to the map file.
+
+        Returns:
+            The graph described by the file.
+
+        Raises:
+            ValueError: If the file cannot be read or is malformed.
+        """
         text = cls._parse_file(filename)
         graph = cls._build_graph(text)
         return graph
 
     @staticmethod
     def _parse_file(filename: str) -> list[tuple[int, str, str]]:
+        """Read a map file into validated key-value entries.
+
+        Comments, starting with ``#``, and blank lines are skipped.
+
+        Args:
+            filename: Path to the map file.
+
+        Returns:
+            A list of ``(line_number, key, value)`` tuples.
+
+        Raises:
+            ValueError: If the file cannot be read, is empty, contains an
+                invalid line, or does not start with a single positive
+                integer ``nb_drones`` entry.
+        """
         entries: list[tuple[int, str, str]] = []
         try:
             with open(filename, "r", encoding="utf-8") as f:
@@ -75,6 +114,24 @@ class Parser:
 
     @staticmethod
     def _validate_metadata(data: str, type: str, is_start_or_end_hub: bool = False) -> list[tuple[str, str | int]]:  # noqa: E501
+        """Parse and validate a bracketed metadata string.
+
+        Args:
+            data: Metadata such as ``[zone=restricted color=red]``.
+            type: Either ``"zone"`` or ``"connection"``, selecting which keys
+                are allowed.
+            is_start_or_end_hub: If True, ``max_drones`` is neither converted
+                nor checked, since hubs have unlimited capacity.
+
+        Returns:
+            A list of ``(key, value)`` pairs. Capacity values are converted
+            to integers.
+
+        Raises:
+            ValueError: If the format is invalid, a key or value is not
+                allowed, a key is duplicated, or a capacity is not a
+                positive integer.
+        """
         metadata: list[tuple[str, str | int]] = []
         if not data.startswith("[") or not data.endswith("]"):
             raise ValueError("Metadata must have the following format: [metadata]")  # noqa: E501
@@ -110,6 +167,18 @@ class Parser:
 
     @staticmethod
     def extract_start_end(entries: list[tuple[int, str, str]]) -> tuple[Zone, Zone]:  # noqa: E501
+        """Create the start and end zones from the parsed entries.
+
+        Args:
+            entries: Parsed ``(line_number, key, value)`` tuples.
+
+        Returns:
+            A ``(start_zone, end_zone)`` tuple. Both zones have unlimited
+            capacity and the end zone is flagged with ``is_end_zone``.
+
+        Raises:
+            ValueError: If a hub is missing, duplicated or malformed.
+        """
         start_zone: Zone | None = None
         end_zone: Zone | None = None
         for line_nr, key, value in entries:
@@ -153,6 +222,18 @@ class Parser:
 
     @classmethod
     def _build_graph(cls, entries: list[tuple[int, str, str]]) -> Graph:
+        """Build a graph from parsed entries.
+
+        Args:
+            entries: Parsed ``(line_number, key, value)`` tuples.
+
+        Returns:
+            The graph containing every zone and connection.
+
+        Raises:
+            ValueError: If an entry is invalid. The message includes its
+                line number.
+        """
         graph = Graph()
         start, end = cls.extract_start_end(entries)
         for line_nr, key, value in entries:
@@ -182,11 +263,29 @@ class Parser:
 
     @staticmethod
     def is_valid_zone_name(name: str) -> bool:
-        """Check whether a zone name contains valid characters."""
+        """Check whether a zone name contains valid characters.
+
+        Args:
+            name: The zone name to check.
+
+        Returns:
+            True if the name is not empty and contains no dash or space.
+        """
         return bool(name) and "-" not in name and " " not in name
 
     @staticmethod
     def _parse_zone(value: str) -> Zone:
+        """Create a zone from a ``hub`` entry value.
+
+        Args:
+            value: Text such as ``name x y [metadata]``.
+
+        Returns:
+            The zone described by the value.
+
+        Raises:
+            ValueError: If the name, coordinates or metadata are invalid.
+        """
         zone_values = value.split(" ", 3)
         if len(zone_values) < 3:
             raise ValueError("Missing zone name or coordinates")
@@ -212,6 +311,19 @@ class Parser:
 
     @staticmethod
     def _parse_connection(value: str, graph: Graph) -> Connection:
+        """Create a connection from a ``connection`` entry value.
+
+        Args:
+            value: Text such as ``a-b [max_link_capacity=2]``.
+            graph: The graph holding the zones defined so far.
+
+        Returns:
+            The connection described by the value.
+
+        Raises:
+            ValueError: If the format or metadata is invalid, a zone is
+                undefined, or the connection already exists.
+        """
         parts = value.split(maxsplit=1)
         names = parts[0].split("-")
         if len(names) != 2 or not all(names):

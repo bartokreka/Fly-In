@@ -8,7 +8,28 @@ from .TerminalVisualizerClass import TerminalVisualizer
 
 
 class Simulation:
+    """Turn-by-turn simulation of drones flying from start to end.
+
+    Attributes:
+        graph: The drone network.
+        drones: All drones in the simulation.
+        current_turn: Number of completed turns.
+        finished_drones: Number of drones that reached the end zone.
+        movement_history: Formatted moves of each completed turn.
+        solution_paths: Candidate paths the drones are assigned to.
+    """
+
     def __init__(self, graph: Graph, paths: list[list[Zone]]) -> None:
+        """Create the drones and assign each one a route.
+
+        Args:
+            graph: The drone network.
+            paths: Candidate paths from the start zone to the end zone.
+
+        Raises:
+            ValueError: If the graph has no start or end zone, or if
+                ``paths`` is empty.
+        """
         if graph.start_zone is None or graph.end_zone is None:
             raise ValueError("Graph must have start and end zones")
         self.graph = graph
@@ -24,12 +45,25 @@ class Simulation:
         allocator.assign_routes(self.drones)
 
     def run(self) -> None:
+        """Run the simulation to completion, printing each turn's moves."""
         while not self.is_finished():
             self.step()
             print(" ".join(self.movement_history[-1]))
             # self.print_simulation()
 
     def execute_move(self, movement: Movement) -> str:
+        """Apply a planned movement to its drone.
+
+        Args:
+            movement: The movement to apply.
+
+        Returns:
+            The move in output format, ``D<id>-<zone>`` or
+            ``D<id>-<connection>``, colored with the destination color.
+
+        Raises:
+            ValueError: If a restricted move has no connection.
+        """
         drone = movement.drone
         destination = movement.destination
         if movement.is_arrival:
@@ -47,7 +81,12 @@ class Simulation:
         return str(visualizer.colorize(text, destination.color))
 
     def step(self) -> None:
-        """Execute one simultaneous simulation turn."""
+        """Execute one simultaneous simulation turn.
+
+        Raises:
+            RuntimeError: If no drone can move while the simulation is not
+                finished.
+        """
         history: list[str] = []
         route_plan = Scheduler(self.graph).step_plan(self.drones)
 
@@ -66,10 +105,15 @@ class Simulation:
         self.movement_history.append(history)
 
     def is_finished(self) -> bool:
-        """Check whether all drones have arrived."""
+        """Check whether all drones have arrived.
+
+        Returns:
+            True if every drone reached the end zone.
+        """
         return self.finished_drones == len(self.drones)
 
     def print_simulation(self) -> None:
+        """Print the current simulation state for debugging."""
         print("\n========== SIMULATION ==========")
         print(f"Current turn: {self.current_turn}")
         print(f"\n{len(self.drones)} Drones:")
