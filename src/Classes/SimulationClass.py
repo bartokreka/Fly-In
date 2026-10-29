@@ -80,6 +80,24 @@ class Simulation:
         visualizer = TerminalVisualizer()
         return str(visualizer.colorize(text, destination.color))
 
+    def reset(self) -> None:
+        """Reset the simulation to its initial state."""
+        if self.graph.start_zone is None:
+            raise ValueError("Graph must have a start zone")
+
+        self.drones = [
+            Drone(i + 1, self.graph.start_zone)
+            for i in range(self.graph.drone_count)
+        ]
+
+        self.current_turn = 0
+        self.finished_drones = 0
+        self.movement_history = []
+
+        allocator = RouteAllocator(self.solution_paths)
+        allocator.assign_routes(self.drones)
+        print("=====RESTART======")
+
     def step(self) -> None:
         """Execute one simultaneous simulation turn.
 

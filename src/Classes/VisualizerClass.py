@@ -91,6 +91,7 @@ class Visualizer:
         connections: Sequence[ConnectionView],
         initial_frame: Frame,
         next_frame: Callable[[], Frame],
+        restart_frame: Callable[[], Frame],
     ) -> None:
         """Create the window, controls, and canvas.
 
@@ -105,6 +106,7 @@ class Visualizer:
         self.connections = list(connections)
         self.frame = initial_frame
         self.next_frame = next_frame
+        self.restart_frame = restart_frame
 
         self.positions: dict[str, tuple[float, float]] = {}
         self.playing = False
@@ -149,6 +151,13 @@ class Visualizer:
             command=self.toggle_play,
         )
         self.play_button.pack(side=tk.LEFT, padx=8)
+
+        self.restart_button = ttk.Button(
+            toolbar,
+            text="Restart",
+            command=self.restart,
+        )
+        self.restart_button.pack(side=tk.LEFT, padx=8)
 
         ttk.Label(toolbar, text="Delay (ms):").pack(side=tk.LEFT)
 
@@ -436,6 +445,21 @@ class Visualizer:
         """Start the graphical event loop."""
         self.root.mainloop()
 
+    def restart(self) -> None:
+        """Restart the simulation from its initial state."""
+        self.pause()
+
+        try:
+            self.frame = self.restart_frame()
+            self._draw()
+            self._update_status()
+        except Exception as error:
+            messagebox.showerror(
+                "Restart error",
+                str(error),
+                parent=self.root,
+            )
+
 
 class SimulationVisualizer:
     """Connect the simulation to the graphical interface."""
@@ -479,6 +503,7 @@ class SimulationVisualizer:
             connections=connections,
             initial_frame=self.build_frame(),
             next_frame=self.next_frame,
+            restart_frame=self.restart_frame,
         )
 
     def build_frame(self) -> Frame:
@@ -536,6 +561,11 @@ class SimulationVisualizer:
             self.simulation.step()
             print(" ".join(self.simulation.movement_history[-1]))
 
+        return self.build_frame()
+
+    def restart_frame(self) -> Frame:
+        """Reset the simulation and return its initial frame."""
+        self.simulation.reset()
         return self.build_frame()
 
     def run(self) -> None:
