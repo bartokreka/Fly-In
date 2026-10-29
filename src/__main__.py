@@ -29,7 +29,7 @@ def main() -> None:
     map_path = args.map
     if not map_path:
         try:
-            map_path = Path("/maps/easy/01_linear_path.txt")
+            map_path = Path("maps/easy/01_linear_path.txt")
         except ValueError:
             print("Error, no valid file for map found!")
             return
